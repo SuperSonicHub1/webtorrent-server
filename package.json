@@ -1,0 +1,30 @@
+{
+  "name": "webtorrent-server",
+  "version": "1.0.0",
+  "description": "Download junk from torrents over HTTP.",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supersonichub1/webtorrent-server.git"
+  },
+  "keywords": [
+    "webtorrent",
+    "http",
+    "express",
+    "web-server"
+  ],
+  "author": "Kyle Williams <kyle.anthony.williams2@gmail.com>",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/supersonichub1/webtorrent-server/issues"
+  },
+  "homepage": "https://github.com/supersonichub1/webtorrent-server#readme",
+  "dependencies": {
+    "ejs": "^3.1.7",
+    "express": "^4.18.1",
+    "send-seekable": "^1.0.4",
+    "webtorrent": "^1.8.16"
+  }
+}

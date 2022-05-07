@@ -1,0 +1,24 @@
+<%- include('header') -%>
+<h1><%= torrent.name %></h1>
+<% if (torrent.createdBy) { %>
+	<p>by <%= torrent.createdBy %></p>
+<% } %>
+<% if (torrent.created) { %>
+	<p>created <%= torrent.created %></p>
+<% } %>
+<% if (torrent.comment) { %>
+	<p><em><%= torrent.comment %></em></p>
+<% } %>
+
+<p><a href="<%= torrent.magnetURI %>">Magnet URI</a></p>
+<h2>Files</h2>
+<ul>
+<% torrent.files.forEach(file => { %>
+	<li>
+		<a href="/download/<%= torrent.infoHash %>/<%= file.name %>">
+			<%= file.name %>
+		</a>
+	</li>
+<% }) %>
+</ul>
+<%- include('footer') -%>
