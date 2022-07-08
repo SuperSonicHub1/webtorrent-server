@@ -1,13 +1,33 @@
 <%- include('header') -%>
-<h1>webtorrent-sever</h1>
-<p>Download stuff from torrents over HTTP.</p>
+	<h1>webtorrent-sever</h1>
+	<p>Download stuff from torrents over HTTP.</p>
 
-<p>Preview a torrent's contents:</p>
-<form action="/preview" method="get">
-	<label>
-		Location of torrent (magnet URI, HTTP .torrent file, <a href="https://github.com/webtorrent/webtorrent/blob/master/docs/api.md#clientaddtorrentid-opts-function-ontorrent-torrent-">etc.</a>)
-		<input type="url" name="location" id="location">
-	</label>
-	<button type="submit">Submit</button>
-</form>
-<%- include('footer') -%>
+	<p>Preview a torrent's contents:</p>
+	<form action="/preview" method="get">
+		<label>
+			Location of torrent (magnet URI, HTTP .torrent file, <a
+				href="https://github.com/webtorrent/webtorrent/blob/master/docs/api.md#clientaddtorrentid-opts-function-ontorrent-torrent-">etc.</a>)
+			<input type="url" name="location" id="location">
+		</label>
+		<button type="submit">Submit</button>
+	</form>
+
+
+	<% if (torrents.length) { %>
+		<h2>Files</h2>
+		<ul>
+			<% torrents.forEach(torrent=> { %>
+				<li>
+					<a href="/preview?location=<%= torrent.infoHash %>">
+						<%= torrent.name %>
+					</a>
+					<form action="/destroy/<%= torrent.infoHash %>" method="post">
+						<button type="submit">Delete</button>
+					</form>
+				</li>
+				<% }) %>
+		</ul>
+		<% } %>
+
+
+			<%- include('footer') -%>

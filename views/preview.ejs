@@ -11,7 +11,7 @@
 <% } %>
 
 <p><a href="<%= torrent.magnetURI %>">Magnet URI</a></p>
-<h2>Files</h2>
+<h2>Torrents</h2>
 <ul>
 <% torrent.files.forEach(file => { %>
 	<li>
@@ -21,4 +21,8 @@
 	</li>
 <% }) %>
 </ul>
+
+<form action="/destroy/<%= torrent.infoHash %>" method="post">
+	<button type="submit">Delete Torrent</button>
+</form>
 <%- include('footer') -%>

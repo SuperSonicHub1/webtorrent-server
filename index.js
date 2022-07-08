@@ -16,11 +16,11 @@ client.on('error', (err) => {
 const exisitingTorrents = {}
 
 app.get('/', (req, res) => {
-	res.render('index', {title: "Index"});
+	res.render('index', {title: "Index", torrents: client.torrents});
 })
 
 process.on('exit', () => {
-	client.destroy()
+	client.destroy(() => {})
 })
 
 app.get('/preview', (req, res) => {
@@ -32,14 +32,34 @@ app.get('/preview', (req, res) => {
 
 	const location = /** @type string */ (req.query.location)
 
+	// TODO: why does `location in client.torrents` not work?
 	if (location in exisitingTorrents) {
 		const torrent = exisitingTorrents[location]
 		res.render('preview', {title: `Preview "${torrent.name}"`, torrent})
 	} else {
-		client.add(location, (torrent) => {
-			exisitingTorrents[location] = torrent
-			res.render('preview', {title: `Preview "${torrent.name}"`, torrent})
-		})
+		client.add(
+			location,
+			(torrent) => {
+				torrent._location = location
+				exisitingTorrents[location] = torrent
+				exisitingTorrents[torrent.infoHash] = torrent
+				res.render('preview', {title: `Preview "${torrent.name}"`, torrent})
+			}
+		)
+	}
+})
+
+app.post('/destroy/:infoHash', (req, res) => {
+	const { infoHash } = req.params
+	const torrent = client.get(infoHash)
+	if (torrent) {
+		delete exisitingTorrents[torrent._location]
+		delete exisitingTorrents[torrent.infoHash]
+		torrent.destroy({ destroyStore: true })
+		res.redirect('/')
+	} else {
+		res.statusCode = 404
+		res.write('Torrent does not exist in client.')
 	}
 })
 
