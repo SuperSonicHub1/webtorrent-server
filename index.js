@@ -3,6 +3,26 @@
 const Express = require('express')
 const sendSeekable = require('send-seekable')
 const WebTorrent = require('webtorrent')
+const MemoryChunkStore = require('memory-chunk-store')
+
+// Utilities
+
+/**
+ * @param {Express.Response} res 
+ */
+function doesNotExist(res) {
+	res.statusCode = 404
+	res.write('Torrent does not exist in client.')
+	res.end()
+}
+
+/**
+ * @param {WebTorrent.Torrent} torrent 
+ */
+function destroyTorrent(torrent) {
+	torrent.destroy({ destroyStore: true })
+	console.log(`Torrent ${torrent.name} (${torrent.infoHash}) destroyed.`)
+}
 
 const app = Express()
 app.set('view engine', 'ejs')
@@ -10,20 +30,13 @@ app.use(sendSeekable)
 
 const client = new WebTorrent()
 
-client.on('error', (err) => {
-	console.error(err)
-})
-const exisitingTorrents = {}
+client.on('error', console.error)
 
-app.get('/', (req, res) => {
-	res.render('index', {title: "Index", torrents: client.torrents});
-})
+app.get('/', (req, res) => res.render('index', {title: "Index", torrents: client.torrents}))
 
-process.on('exit', () => {
-	client.destroy(() => {})
-})
+process.on('exit', () => client.destroy())
 
-app.get('/preview', (req, res) => {
+app.get('/add', (req, res) => {
 	if (!(req.query.location)) {
 		res.statusCode = 400
 		res.write('No "location" query parameter.')
@@ -32,20 +45,31 @@ app.get('/preview', (req, res) => {
 
 	const location = /** @type string */ (req.query.location)
 
-	// TODO: why does `location in client.torrents` not work?
-	if (location in exisitingTorrents) {
-		const torrent = exisitingTorrents[location]
+	client.add(
+		location,
+		{
+			// Most server solutions have limited storage space, which can cause crashes,
+			// so we'll use an in-memory solution instead.
+			store: MemoryChunkStore,
+		},
+		(torrent) => {
+			// Destroy torrents automatically on finishing of download after 6 hours
+			torrent.on("done", () => setTimeout(() => destroyTorrent(torrent), 1000 * 60 * 60 * 6))
+
+			res.redirect(`/preview/${torrent.infoHash}`)
+			res.end()
+		}
+	)
+})
+
+app.get('/preview/:infoHash', (req, res) => {
+	const { infoHash } = req.params
+	const torrent = client.get(infoHash)
+	if (torrent) {
 		res.render('preview', {title: `Preview "${torrent.name}"`, torrent})
+		res.end()
 	} else {
-		client.add(
-			location,
-			(torrent) => {
-				torrent._location = location
-				exisitingTorrents[location] = torrent
-				exisitingTorrents[torrent.infoHash] = torrent
-				res.render('preview', {title: `Preview "${torrent.name}"`, torrent})
-			}
-		)
+		doesNotExist(res)
 	}
 })
 
@@ -53,13 +77,10 @@ app.post('/destroy/:infoHash', (req, res) => {
 	const { infoHash } = req.params
 	const torrent = client.get(infoHash)
 	if (torrent) {
-		delete exisitingTorrents[torrent._location]
-		delete exisitingTorrents[torrent.infoHash]
-		torrent.destroy({ destroyStore: true })
+		destroyTorrent(torrent)
 		res.redirect('/')
 	} else {
-		res.statusCode = 404
-		res.write('Torrent does not exist in client.')
+		doesNotExist(res)
 	}
 })
 
@@ -78,8 +99,7 @@ app.get('/download/:infoHash/:filename', (req, res) => {
 			return
 		}
 	} else {
-		res.statusCode = 404
-		res.write('Client not downloading requested torrent.')
+		doesNotExist(res)
 		return
 	}	
 })

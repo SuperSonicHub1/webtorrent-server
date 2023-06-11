@@ -3,7 +3,7 @@
 	<p>Download stuff from torrents over HTTP.</p>
 
 	<p>Preview a torrent's contents:</p>
-	<form action="/preview" method="get">
+	<form action="/add" method="get">
 		<label>
 			Location of torrent (magnet URI, HTTP .torrent file, <a
 				href="https://github.com/webtorrent/webtorrent/blob/master/docs/api.md#clientaddtorrentid-opts-function-ontorrent-torrent-">etc.</a>)
@@ -14,14 +14,12 @@
 
 
 	<% if (torrents.length) { %>
-		<h2>Files</h2>
+		<h2>Torrents</h2>
 		<ul>
 			<% torrents.forEach(torrent=> { %>
 				<li>
-					<a href="/preview?location=<%= torrent.infoHash %>">
-						<%= torrent.name %>
-					</a>
 					<form action="/destroy/<%= torrent.infoHash %>" method="post">
+						<a href="/preview/<%= torrent.infoHash %>"><%= torrent.name %></a>
 						<button type="submit">Delete</button>
 					</form>
 				</li>

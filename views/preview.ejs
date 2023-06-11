@@ -10,8 +10,17 @@
 	<p><em><%= torrent.comment %></em></p>
 <% } %>
 
+<p>
+	<label>
+		Torrent progress:
+		<progress max="1" value="<%= torrent.progress %>"><%= torrent.progress * 100 %>%</progress>
+		<%= torrent.progress * 100 %>%
+	</label>
+</p>
+	
 <p><a href="<%= torrent.magnetURI %>">Magnet URI</a></p>
-<h2>Torrents</h2>
+
+<h2>Files</h2>
 <ul>
 <% torrent.files.forEach(file => { %>
 	<li>
